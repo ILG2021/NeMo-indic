@@ -26,9 +26,9 @@ def main(args):
             model = nemo_asr.models.EncDecCTCModel.from_pretrained(model_name=args.model_path)
 
     # 2. 修改配置以匹配我们的数据集
-    model.cfg.train_ds.manifest_filepath = args.train_manifest
+    model.cfg.train_ds.manifest_filepath = [args.train_manifest]
     model.cfg.train_ds.batch_size = args.batch_size
-    model.cfg.validation_ds.manifest_filepath = args.val_manifest
+    model.cfg.validation_ds.manifest_filepath = [args.val_manifest]
     model.cfg.validation_ds.batch_size = args.batch_size
 
     # 设置较小的微调学习率

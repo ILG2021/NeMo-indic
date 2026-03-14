@@ -29,11 +29,13 @@ python prepare_dataset.py \
 ### 0. 环境特别说明
 IndicConformer 建议使用 AI4Bharat 分支的 NeMo：
 ```bash
-git clone https://github.com/AI4Bharat/NeMo.git && cd NeMo && git checkout nemo-v2 && bash reinstall.sh
+bash reinstall.sh
 ```
 
 ### 1. 运行微调脚本
 你需要提供下载好的 `.nemo` 文件路径：
+下载地址：
+https://github.com/AI4Bharat/IndicConformerASR
 ```bash
 python finetune.py \
     --model_path "path/to/indicconformer_stt_hi_hybrid_rnnt_large.nemo" \

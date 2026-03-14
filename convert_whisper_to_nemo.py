@@ -3,7 +3,7 @@ import argparse
 import sys
 import os
 
-def convert_whisper_to_nemo(input_jsonl, output_jsonl):
+def convert_whisper_to_nemo(input_jsonl, output_jsonl, lang):
     """
     Converts Whisper format jsonl to NeMo manifest format.
     Assumes the audio path in the input is already the absolute path.
@@ -25,11 +25,15 @@ def convert_whisper_to_nemo(input_jsonl, output_jsonl):
                 text = data.get("sentence", "")
                 duration = data.get("duration", 0.0)
                 
+                # Priority: 1. language/lang in JSON, 2. CLI argument
+                record_lang = data.get("language", data.get("lang", lang))
+                
                 # As user stated, paths are already absolute, so no joining needed.
                 nemo_record = {
                     "audio_filepath": audio_path,
                     "duration": duration,
-                    "text": text
+                    "text": text,
+                    "lang": record_lang  # Required for IndicConformer
                 }
                 records.append(nemo_record)
                 
@@ -48,6 +52,7 @@ def convert_whisper_to_nemo(input_jsonl, output_jsonl):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Convert Whisper JSONL format to NeMo Manifest JSONL format")
     parser.add_argument("--input", "-i", type=str, required=True, help="Path to input Whisper jsonl file")
+    parser.add_argument("--lang", "-l", type=str, default="hi", help="Language code for the manifest (default: hi for Hindi)")
     
     args = parser.parse_args()
     
@@ -55,4 +60,4 @@ if __name__ == "__main__":
     base, ext = os.path.splitext(input_path)
     output_path = f"{base}-nemo{ext}"
     
-    convert_whisper_to_nemo(input_path, output_path)
+    convert_whisper_to_nemo(input_path, output_path, args.lang)

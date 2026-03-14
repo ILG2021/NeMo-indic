@@ -108,8 +108,6 @@ Next, follow the instructions for Linux systems, as provided above. For example:
 .. code-block:: bash
 
     apt-get update && apt-get install -y libsndfile1 ffmpeg
-    git clone https://github.com/NVIDIA/NeMo
-    cd NeMo
     ./reinstall.sh
 
 RNNT
