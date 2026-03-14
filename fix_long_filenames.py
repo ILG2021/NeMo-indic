@@ -121,7 +121,7 @@ def fix_manifest_filenames(input_manifest):
                 else:
                     # KEEPS ORIGINAL
                     manifest_path = raw_path
-
+                manifest_path = manifest_path.replace('\\', '/')
                 data["audio_filepath"] = manifest_path
                 f_out.write(json.dumps(data, ensure_ascii=False) + '\n')
                 processed_count += 1
