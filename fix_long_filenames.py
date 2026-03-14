@@ -65,16 +65,22 @@ def fix_manifest_filenames(input_manifest):
 
                 name_part, ext_part = os.path.splitext(file_name)
                 
-                # Check byte length (important: Linux limit is 255 BYTES)
-                name_bytes = file_name.encode('utf-8')
+                # Check byte length (important: Linux limit is 255 BYTES TOTAL)
+                # We check the full filename including extension
+                filename_bytes = file_name.encode('utf-8')
                 
-                if len(name_bytes) > 255:
+                if len(filename_bytes) > 255:
                     # TRUNCATE LOGIC
                     name_part, ext_part = os.path.splitext(file_name)
-                    name_part_bytes = name_part.encode('utf-8')
+                    ext_bytes = ext_part.encode('utf-8')
                     
-                    # Truncate to 240 bytes to be safe
-                    truncated_bytes = name_part_bytes[:240]
+                    # We need: len(name_part_bytes) + len(ext_bytes) <= 255
+                    # Let's target 240 bytes for the whole thing to be safe
+                    max_name_bytes = 240 - len(ext_bytes)
+                    
+                    name_part_bytes = name_part.encode('utf-8')
+                    truncated_bytes = name_part_bytes[:max_name_bytes]
+                    
                     while True:
                         try:
                             new_name_part = truncated_bytes.decode('utf-8')
@@ -103,10 +109,15 @@ def fix_manifest_filenames(input_manifest):
                             shutil.copy2(old_path, new_full_path)
                     
                     # Convert back to WSL path for the manifest
+                    # CRITICAL: Always use forward slashes for WSL manifest
                     manifest_path = new_full_path
-                    if os.name == 'nt' and manifest_path.find(':/') != -1:
+                    if os.name == 'nt' and manifest_path.find(':/') != -1 or manifest_path.find(':\\') != -1:
+                        # Normalize Windows path to use forward slashes
+                        manifest_path = manifest_path.replace('\\', '/')
                         drive_letter = manifest_path[0].lower()
                         manifest_path = f"/mnt/{drive_letter}{manifest_path[2:]}"
+                    else:
+                        manifest_path = manifest_path.replace('\\', '/')
                 else:
                     # KEEPS ORIGINAL
                     manifest_path = raw_path
