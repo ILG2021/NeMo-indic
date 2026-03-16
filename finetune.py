@@ -27,22 +27,32 @@ def main(args):
 
     # 2. 修改配置以匹配我们的数据集
     with open_dict(model.cfg):
+        # 基础数据配置
         model.cfg.train_ds.manifest_filepath = [args.train_manifest]
         model.cfg.train_ds.batch_size = args.batch_size
-        model.cfg.train_ds.num_workers = 4  # 降低训练进程数
-        model.cfg.train_ds.sample_rate = 16000
-        model.cfg.train_ds.force_channel = "mono" # 强制单声道
+        model.cfg.train_ds.num_workers = 4
         
         model.cfg.validation_ds.manifest_filepath = [args.val_manifest]
         model.cfg.validation_ds.batch_size = args.batch_size
-        model.cfg.validation_ds.num_workers = 0 # 验证集建议直接设为 0
-        model.cfg.validation_ds.sample_rate = 16000
-        model.cfg.validation_ds.force_channel = "mono"
+        model.cfg.validation_ds.num_workers = 0
+
+        # 【核心修复】强制指定所有数据层的通道和采样率
+        for ds_cfg in [model.cfg.train_ds, model.cfg.validation_ds]:
+            ds_cfg.sample_rate = 16000
+            if 'force_channel' not in ds_cfg:
+                ds_cfg.force_channel = "mono" # 如果没有，强行注入
+            else:
+                ds_cfg.force_channel = "mono" # 如果有，覆盖为 mono
+            
+            # 部分复杂模型可能在内部嵌套了这些参数，我们递归处理
+            if 'parser_cfg' in ds_cfg:
+                with open_dict(ds_cfg.parser_cfg):
+                    ds_cfg.parser_cfg.force_channel = "mono"
 
         # 设置较小的微调学习率
         model.cfg.optim.lr = args.lr
 
-    # 更新模型以使用新的数据配置
+    # 重新触发数据设置
     model.setup_training_data(train_data_config=model.cfg.train_ds)
     model.setup_validation_data(val_data_config=model.cfg.validation_ds)
 

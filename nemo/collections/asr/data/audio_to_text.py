@@ -89,6 +89,10 @@ def _speech_collate_fn(batch, pad_id):
             sig, sig_len, tokens_i, tokens_i_len = b
         if has_audio:
             sig_len = sig_len.item()
+            # 【修复】如果音频是多声道（2D），强制转为单声道（1D）
+            if sig.dim() > 1:
+                sig = sig.mean(dim=-1)  # 对所有通道取平均
+                sig_len = sig.shape[0]
             if sig_len < max_audio_len:
                 pad = (0, max_audio_len - sig_len)
                 sig = torch.nn.functional.pad(sig, pad)
