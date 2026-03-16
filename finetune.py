@@ -31,7 +31,12 @@ def main(args):
     model.cfg.validation_ds.manifest_filepath = [args.val_manifest]
     model.cfg.validation_ds.batch_size = args.batch_size
     model.cfg.train_ds.num_workers = 4  # 降低训练进程数
+    model.cfg.train_ds.sample_rate = 16000
+    model.cfg.train_ds.force_channel = "mono" # 强制单声道，修复 stack 报错
+    
     model.cfg.validation_ds.num_workers = 0 # 验证集建议直接设为 0，最稳妥
+    model.cfg.validation_ds.sample_rate = 16000
+    model.cfg.validation_ds.force_channel = "mono"
     
 
     # 设置较小的微调学习率
