@@ -1,6 +1,6 @@
 import argparse
 import pytorch_lightning as pl
-from omegaconf import OmegaConf
+from omegaconf import OmegaConf, open_dict
 
 import nemo.collections.asr as nemo_asr
 from nemo.utils import logging
@@ -26,21 +26,21 @@ def main(args):
             model = nemo_asr.models.EncDecCTCModel.from_pretrained(model_name=args.model_path)
 
     # 2. 修改配置以匹配我们的数据集
-    model.cfg.train_ds.manifest_filepath = [args.train_manifest]
-    model.cfg.train_ds.batch_size = args.batch_size
-    model.cfg.validation_ds.manifest_filepath = [args.val_manifest]
-    model.cfg.validation_ds.batch_size = args.batch_size
-    model.cfg.train_ds.num_workers = 4  # 降低训练进程数
-    model.cfg.train_ds.sample_rate = 16000
-    model.cfg.train_ds.force_channel = "mono" # 强制单声道，修复 stack 报错
-    
-    model.cfg.validation_ds.num_workers = 0 # 验证集建议直接设为 0，最稳妥
-    model.cfg.validation_ds.sample_rate = 16000
-    model.cfg.validation_ds.force_channel = "mono"
-    
+    with open_dict(model.cfg):
+        model.cfg.train_ds.manifest_filepath = [args.train_manifest]
+        model.cfg.train_ds.batch_size = args.batch_size
+        model.cfg.train_ds.num_workers = 4  # 降低训练进程数
+        model.cfg.train_ds.sample_rate = 16000
+        model.cfg.train_ds.force_channel = "mono" # 强制单声道
+        
+        model.cfg.validation_ds.manifest_filepath = [args.val_manifest]
+        model.cfg.validation_ds.batch_size = args.batch_size
+        model.cfg.validation_ds.num_workers = 0 # 验证集建议直接设为 0
+        model.cfg.validation_ds.sample_rate = 16000
+        model.cfg.validation_ds.force_channel = "mono"
 
-    # 设置较小的微调学习率
-    model.cfg.optim.lr = args.lr
+        # 设置较小的微调学习率
+        model.cfg.optim.lr = args.lr
 
     # 更新模型以使用新的数据配置
     model.setup_training_data(train_data_config=model.cfg.train_ds)
