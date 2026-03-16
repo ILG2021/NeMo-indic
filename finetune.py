@@ -72,7 +72,8 @@ def main(args):
         devices=1,
         accelerator="gpu",
         max_epochs=args.epochs,
-        val_check_interval=args.val_check_interval, # 每隔多少 steps 或多少比例跑一次验证
+        val_check_interval=args.val_check_interval,
+        gradient_clip_val=1.0, # 梯度裁剪，防止 Loss 飙升
         callbacks=[checkpoint_callback],
         enable_checkpointing=True,
         log_every_n_steps=10
