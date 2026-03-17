@@ -36,51 +36,30 @@ bash reinstall.sh
 你需要提供下载好的 `.nemo` 文件路径：
 下载地址：
 https://github.com/AI4Bharat/IndicConformerASR
+
 ```bash
-python finetune.py \
-    --model_path "path/to/indicconformer_stt_hi_hybrid_rnnt_large.nemo" \
-    --train_manifest train_manifest.jsonl \
-    --val_manifest val_manifest.jsonl \
-    --epochs 10 \
-    --batch_size 4 \
-    --lr 5e-6
+python examples/asr/speech_to_text_finetune.py \
+    init_from_nemo_model="indicconformer_stt_ne_hybrid_rnnt_large.nemo" \
+    model.train_ds.manifest_filepath=\[\"train-fixed.jsonl\"\] \
+    model.validation_ds.manifest_filepath=\[\"val-fixed.jsonl\"\] \
+    model.train_ds.batch_size=4 \
+    model.validation_ds.batch_size=4 \
+    model.train_ds.num_workers=4 \
+    model.validation_ds.num_workers=0 \
+    trainer.devices=1 \
+    trainer.accelerator="gpu" \
+    trainer.max_epochs=3 \
+    trainer.val_check_interval=5000 \
+    exp_manager.exp_dir="finetune_experiments" \
+    exp_manager.create_checkpoint_callback=True \
+    exp_manager.checkpoint_callback_params.save_top_k=5 \
+    exp_manager.checkpoint_callback_params.monitor="val_wer" \
+    exp_manager.checkpoint_callback_params.mode="min" \
+    exp_manager.resume_if_exists=True
 ```
 > [!TIP]
 > IndicConformer 模型体积较大（如 Large 或 600M），如果显存不足，请降低 `batch_size`。
 
 ## 第三步：导出为 Sherpa-ONNX 格式
 
-由于您使用的是 **IndicConformer (Hybrid RNNT)** 且需要用 `sherpa-onnx` 推理，需要将 `.nemo` 导出为 `encoder.onnx`, `decoder.onnx`, `joiner.onnx` 以及 `tokens.txt`。
 
-### 1. 安装导出工具
-推荐使用 `sherpa-onnx` 附带的脚本进行精确转换：
-```bash
-pip install sherpa-onnx
-git clone https://github.com/k2-fsa/sherpa-onnx
-```
-
-### 2. 执行导出
-```bash
-python sherpa-onnx/python-api-examples/export-nemo-transducer-to-onnx.py \
-    --input finetuned_model.nemo \
-    --output_dir ./sherpa_model
-```
-该命令会自动处理模型权重剥离、Tokenizer 提取和 ONNX 导出。
-
-## 第四步：使用 Sherpa-ONNX 推理
-
-导出后，你会得到一个包含多个 `.onnx` 和 `tokens.txt` 的文件夹。使用 `sherpa_inference.py` 进行高性能推理：
-
-```bash
-python sherpa_inference.py \
-    --encoder ./sherpa_model/encoder.onnx \
-    --decoder ./sherpa_model/decoder.onnx \
-    --joiner ./sherpa_model/joiner.onnx \
-    --tokens ./sherpa_model/tokens.txt \
-    --wav test_audio.wav
-```
-
-### 为什么选择 Sherpa-ONNX？
-1. **无 Python 依赖**：可在 C++, Android, iOS 等环境运行。
-2. **内存占用低**：适合嵌入式和边缘侧部署。
-3. **支持流式识别**：IndicConformer 虽然是大模型，但架构支持高效的量化和推理。
