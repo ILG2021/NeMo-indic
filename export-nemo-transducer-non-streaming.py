@@ -2,6 +2,7 @@
 # Copyright      2024  Xiaomi Corp.        (authors: Fangjun Kuang)
 import argparse
 import os
+os.environ["TORCH_ONNX_DISABLE_ONNX_SCRIPT"] = "1"
 from typing import Dict
 
 import nemo.collections.asr as nemo_asr
@@ -85,9 +86,9 @@ def main():
     asr_model.set_export_config({"decoder_type": "rnnt"})
 
     # asr_model.export("model.onnx")
-    asr_model.encoder.export("encoder.onnx", onnx_opset_version=17)
-    asr_model.decoder.export("decoder.onnx", onnx_opset_version=17)
-    asr_model.joint.export("joiner.onnx", onnx_opset_version=17)
+    asr_model.encoder.export("encoder.onnx", onnx_opset_version=16)
+    asr_model.decoder.export("decoder.onnx", onnx_opset_version=16)
+    asr_model.joint.export("joiner.onnx", onnx_opset_version=16)
     # model.onnx is a suffix.
     # It will generate two files:
     # encoder-model.onnx
