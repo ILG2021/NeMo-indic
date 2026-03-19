@@ -85,9 +85,9 @@ def main():
     asr_model.set_export_config({"decoder_type": "rnnt"})
 
     # asr_model.export("model.onnx")
-    asr_model.encoder.export("encoder.onnx")
-    asr_model.decoder.export("decoder.onnx")
-    asr_model.joint.export("joiner.onnx")
+    asr_model.encoder.export("encoder.onnx", onnx_opset_version=17)
+    asr_model.decoder.export("decoder.onnx", onnx_opset_version=17)
+    asr_model.joint.export("joiner.onnx", onnx_opset_version=17)
     # model.onnx is a suffix.
     # It will generate two files:
     # encoder-model.onnx
