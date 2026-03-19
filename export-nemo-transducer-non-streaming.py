@@ -3,6 +3,7 @@
 import argparse
 import os
 os.environ["TORCH_ONNX_DISABLE_ONNX_SCRIPT"] = "1"
+os.environ["TYPEGUARD_DISABLE"] = "1"
 from typing import Dict
 
 import nemo.collections.asr as nemo_asr
