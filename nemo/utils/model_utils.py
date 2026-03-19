@@ -484,7 +484,10 @@ def maybe_update_config_version(cfg: 'DictConfig'):
             return cfg
 
     # Make a copy of model config.
-    cfg = copy.deepcopy(cfg)
+    if _HAS_HYDRA and isinstance(cfg, DictConfig):
+        cfg = OmegaConf.create(OmegaConf.to_container(cfg, resolve=True))
+    else:
+        cfg = copy.deepcopy(cfg)
     OmegaConf.set_struct(cfg, False)
 
     # Convert config.
